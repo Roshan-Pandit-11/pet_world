@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String @id @default(uuid()) 
+  name            String  
+  email           String @unique 
+  phone_no        String? @unique
+  password        String
+  role            userRole
+  pets            Pets[]
+  sitter          Sitter?
+  verified_status verified_status
+}
+
+enum userRole {
+  owner 
+  sitter
+}
+
+enum verified_status {
+  basic 
+  govtId_approved
+  advance
+}
+
+model Pets {
+  id        String @id @default(uuid()) 
+  owner_id  String
+  owner     User  @relation(fields: [owner_id] , references: [id] , onDelete: Cascade)
+
+  booking   Bookings[]
+  pet_name  String 
+  type      String 
+  breed     String 
+  behaviour String
+  diet_note String
+}
+
+model Sitter {
+  id       String @id @default(uuid()) 
+  user_id  String @unique
+  user     User   @relation(fields: [user_id] , references: [id] , onDelete: Cascade)
+
+  bookings     Bookings[]
+  listing       Listing[]
+  experience    Int
+  home_details  String
+  price_per_day Int
+}
+
+model Listing {
+  id        String @id @default(uuid())
+  sitter_id String
+  sitter    Sitter   @relation(fields: [sitter_id] , references: [id] , onDelete: Cascade)
+
+  availability   DateTime[]
+  location       String
+}
+
+model Bookings {
+  id        String @id @default(uuid()) 
+  pet_id    String 
+  pet       Pets   @relation(fields: [pet_id] , references: [id] , onDelete: Cascade) 
+
+  sitter_id  String
+  sitter     Sitter   @relation(fields: [sitter_id] , references: [id] , onDelete: Cascade)
+
+  reviews      Reviews[]
+
+  start_date   DateTime
+  end_date     DateTime
+  status       Booking_status
+}
+
+enum Booking_status {
+  pending 
+  confirm 
+  completed
+  cancelled
+}
+
+model Reviews {
+  id          String @id @default(uuid())
+  booking_id  String
+  booking     Bookings @relation(fields: [booking_id] , references: [id] , onDelete: Cascade)
+
+  rating    Decimal
+  comments  String
+}
